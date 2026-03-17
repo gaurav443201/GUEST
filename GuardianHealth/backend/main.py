@@ -32,6 +32,10 @@ class Alert(BaseModel):
 alerts_db: List[Alert] = []
 alert_counter = 1
 
+@app.get("/")
+def read_root():
+    return {"message": "Guardian Health API is running successfully!"}
+
 @app.post("/health-data")
 def receive_health_data(data: HealthData):
     return {"status": "success", "message": "Data received"}

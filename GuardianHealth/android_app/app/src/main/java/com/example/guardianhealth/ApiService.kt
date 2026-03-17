@@ -35,8 +35,8 @@ interface ApiService {
 }
 
 object RetrofitClient {
-    // 10.0.2.2 points to localhost from Android Emulator
-    private const val BASE_URL = "http://10.0.2.2:8000" // Update this for real device or Render deployment
+    // Render endpoint
+    private const val BASE_URL = "https://guest-65oe.onrender.com" // Update this for real device or Render deployment
 
     val instance: ApiService by lazy {
         Retrofit.Builder()
