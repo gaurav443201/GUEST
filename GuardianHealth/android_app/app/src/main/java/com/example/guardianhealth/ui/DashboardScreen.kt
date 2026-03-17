@@ -99,29 +99,47 @@ fun DashboardScreen(viewModel: DashboardViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Assistance Controls (Moved up and attractive)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(
+                onClick = { viewModel.requestRoomService() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).height(50.dp)
+            ) { Text("Room Service", fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(
+                onClick = { viewModel.callAssistance() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).height(50.dp)
+            ) { Text("Call Support", fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         // Simulation Controls
-        Text("Simulation Controls", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+        Text("Simulation Controls", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color.Gray)
         Spacer(modifier = Modifier.height(16.dp))
         
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = { viewModel.setNormalMode() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) { Text("Normal") }
-            Button(onClick = { viewModel.increaseHeartRate() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))) { Text("HR ↑") }
-            Button(onClick = { viewModel.decreaseSpO2() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))) { Text("SpO2 ↓") }
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { viewModel.triggerEmergency() },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("Trigger Emergency") }
-        
-        Spacer(modifier = Modifier.weight(1f))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(
+                onClick = { viewModel.setNormalMode() }, 
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).height(60.dp)
+            ) { Text("Normal Mode", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
 
-        // Assistance Controls
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            OutlinedButton(onClick = { viewModel.requestRoomService() }) { Text("Request Room Service") }
-            OutlinedButton(onClick = { viewModel.callAssistance() }) { Text("Call Assistance") }
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(
+                onClick = { viewModel.simulateHealthCrisis() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).height(60.dp)
+            ) { Text("Simulate Crisis", fontSize = 16.sp, fontWeight = FontWeight.Bold) }
         }
         
         Spacer(modifier = Modifier.height(16.dp))

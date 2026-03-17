@@ -70,34 +70,19 @@ class DashboardViewModel : ViewModel() {
         _status.value = "Normal"
     }
 
-    fun increaseHeartRate() {
+    fun simulateHealthCrisis() {
         viewModelScope.launch {
-            for (i in 1..20) {
-                if (_heartRate.value < 160) {
+            for (i in 1..25) {
+                if (_heartRate.value < 165) {
                     _heartRate.value += 4
                 }
-                delay(200)
-                checkVitals()
-            }
-        }
-    }
-
-    fun decreaseSpO2() {
-        viewModelScope.launch {
-            for (i in 1..10) {
-                if (_spo2.value > 80) {
-                    _spo2.value -= 2
+                if (_spo2.value > 82) {
+                    _spo2.value -= 1
                 }
-                delay(300)
                 checkVitals()
+                delay(300)
             }
         }
-    }
-
-    fun triggerEmergency() {
-        _heartRate.value = 155
-        _spo2.value = 84
-        checkVitals()
     }
 
     private fun sendEmergencyData(hr: Int, o2: Int) {

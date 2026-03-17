@@ -31,6 +31,17 @@
         .assistance .status-badge { background: #eab308; color: black; }
         .metric { font-weight: bold; font-size: 16px; }
         .metric.danger { color: #fca5a5; }
+        
+        @keyframes emergencyFlash {
+            0% { box-shadow: inset 0 0 0 0 rgba(239,68,68, 0); }
+            50% { box-shadow: inset 0 0 60px 20px rgba(239,68,68, 0.9); }
+            100% { box-shadow: inset 0 0 0 0 rgba(239,68,68, 0); }
+        }
+        body.emergency-active {
+            animation: emergencyFlash 1s infinite;
+            background-color: #450a0a;
+            transition: background-color 0.4s ease;
+        }
     </style>
 </head>
 <body>
@@ -73,12 +84,18 @@
         function renderAlerts(alerts) {
             const tbody = document.getElementById("alerts-body");
             if (alerts.length === 0) return;
+            
+            let hasEmergency = false;
             tbody.innerHTML = "";
+            
             alerts.forEach(alert => {
                 const tr = document.createElement("tr");
                 let alertTypeFormatted = alert.type.replace('_', ' ').toUpperCase();
                 
-                if (alert.type === "emergency") tr.className = "emergency";
+                if (alert.type === "emergency") {
+                    tr.className = "emergency";
+                    hasEmergency = true;
+                }
                 else if (alert.type === "room_service") tr.className = "service";
                 else if (alert.type === "assistance") tr.className = "assistance";
 
@@ -99,6 +116,13 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Toggle red flashing animation
+            if (hasEmergency) {
+                document.body.classList.add("emergency-active");
+            } else {
+                document.body.classList.remove("emergency-active");
+            }
         }
 
         // Poll every 1 second
