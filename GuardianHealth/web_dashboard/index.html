@@ -32,6 +32,23 @@
         .metric { font-weight: bold; font-size: 16px; }
         .metric.danger { color: #fca5a5; }
         
+        /* New styling for resolved rows */
+        tr.resolved { opacity: 0.6; filter: grayscale(100%); background-color: #1e293b !important; }
+        tr.resolved .status-badge { background: #475569; color: #cbd5e1; }
+        .resolve-btn {
+            background-color: transparent;
+            color: #94a3b8;
+            border: 1px solid #475569;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .resolve-btn:hover { background-color: #10b981; color: white; border-color: #10b981; }
+
+        
         @keyframes emergencyFlash {
             0% { box-shadow: inset 0 0 0 0 rgba(239,68,68, 0); }
             50% { box-shadow: inset 0 0 60px 20px rgba(239,68,68, 0.9); }
@@ -95,6 +112,7 @@
                     <th>HR (BPM)</th>
                     <th>SpO2 (%)</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="alerts-body">
@@ -127,18 +145,30 @@
                 const tr = document.createElement("tr");
                 let alertTypeFormatted = alert.type.replace('_', ' ').toUpperCase();
                 
-                if (alert.type === "emergency") {
-                    tr.className = "emergency";
-                    hasEmergency = true;
+                // Update row styling based on status
+                if (alert.status === "resolved") {
+                    tr.className = "resolved";
+                    if (alert.type === "emergency") {
+                        // Prevent emergency flashing if it was resolved
+                        hasEmergency = false; 
+                    }
+                } else {
+                    if (alert.type === "emergency") {
+                        tr.className = "emergency";
+                        hasEmergency = true;
+                    }
+                    else if (alert.type === "room_service") tr.className = "service";
+                    else if (alert.type === "assistance") tr.className = "assistance";
                 }
-                else if (alert.type === "room_service") tr.className = "service";
-                else if (alert.type === "assistance") tr.className = "assistance";
 
                 const hrMetric = alert.heart_rate ? `<span class="metric ${alert.heart_rate > 150 ? 'danger' : ''}">${alert.heart_rate}</span>` : '-';
                 const spoMetric = alert.spo2 ? `<span class="metric ${alert.spo2 < 85 ? 'danger' : ''}">${alert.spo2}%</span>` : '-';
                 
                 // Format relative time or standard time
                 const timeStr = new Date(alert.timestamp).toLocaleTimeString();
+
+                let badgeText = alert.status.toUpperCase();
+                if (alert.type === "emergency" && alert.status !== "resolved") badgeText = "CRITICAL";
 
                 tr.innerHTML = `
                     <td>#${alert.id}</td>
@@ -147,7 +177,10 @@
                     <td>${timeStr}</td>
                     <td>${hrMetric}</td>
                     <td>${spoMetric}</td>
-                    <td><span class="status-badge">${alert.type === "emergency" ? "CRITICAL" : alert.status.toUpperCase()}</span></td>
+                    <td><span class="status-badge">${badgeText}</span></td>
+                    <td>
+                        ${alert.status !== 'resolved' ? `<button class="resolve-btn" onclick="resolveTask(${alert.id})">Mark Resolved</button>` : `<span style="font-size:12px; color:#475569;">✔ Done</span>`}
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -175,6 +208,20 @@
                 }
             } catch (error) {
                 console.error("Error clearing alerts:", error);
+                alert("Error connecting to server.");
+            }
+        }
+
+        async function resolveTask(alertId) {
+            try {
+                const response = await fetch(`${API_URL}/resolve/${alertId}`, { method: 'POST' });
+                if (response.ok) {
+                    fetchAlerts(); // Instantly refresh the table to show updated status
+                } else {
+                    alert("Failed to resolve task.");
+                }
+            } catch (error) {
+                console.error("Error resolving task:", error);
                 alert("Error connecting to server.");
             }
         }

@@ -66,6 +66,14 @@ def clear_alerts():
     alerts_db = []
     return {"status": "success", "message": "All alerts cleared"}
 
+@app.post("/resolve/{alert_id}")
+def resolve_alert(alert_id: int):
+    for alert in alerts_db:
+        if alert.id == alert_id:
+            alert.status = "resolved"
+            return {"status": "success", "message": f"Alert {alert_id} resolved"}
+    return {"status": "error", "message": "Alert not found"}
+
 class ServiceRequest(BaseModel):
     location: str
     type: str # 'room_service', 'assistance'
