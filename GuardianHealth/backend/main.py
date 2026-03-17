@@ -60,6 +60,12 @@ def trigger_emergency(data: HealthData):
 def get_alerts():
     return sorted(alerts_db, key=lambda x: x.id, reverse=True)
 
+@app.post("/clear")
+def clear_alerts():
+    global alerts_db
+    alerts_db = []
+    return {"status": "success", "message": "All alerts cleared"}
+
 class ServiceRequest(BaseModel):
     location: str
     type: str # 'room_service', 'assistance'

@@ -42,13 +42,48 @@
             background-color: #450a0a;
             transition: background-color 0.4s ease;
         }
+
+        .clear-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .clear-btn:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.4);
+        }
+        .clear-btn:active {
+            transform: translateY(0);
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="dashboard-header">
             <h1>Guardian Health Live Monitors</h1>
-            <div class="live-badge">● LIVE</div>
+            <div class="header-controls">
+                <button class="clear-btn" onclick="clearAlerts()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                    Resolve All
+                </button>
+                <div class="live-badge">● LIVE</div>
+            </div>
         </div>
         <table>
             <thead>
@@ -128,6 +163,21 @@
         // Poll every 1 second
         setInterval(fetchAlerts, 1000);
         fetchAlerts();
+
+        async function clearAlerts() {
+            try {
+                const response = await fetch(`${API_URL}/clear`, { method: 'POST' });
+                if (response.ok) {
+                    fetchAlerts(); // Instantly refresh table
+                    document.body.classList.remove("emergency-active"); // Instantly turn off flash
+                } else {
+                    alert("Failed to clear alerts.");
+                }
+            } catch (error) {
+                console.error("Error clearing alerts:", error);
+                alert("Error connecting to server.");
+            }
+        }
     </script>
 </body>
 </html>
