@@ -11,6 +11,9 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 
+import com.example.guardianhealth.data.VitalsAnalysisRequest
+import com.example.guardianhealth.data.VitalsAnalysisResponse
+
 interface ApiService {
 
     @POST("health-data")
@@ -30,4 +33,7 @@ interface ApiService {
 
     @GET("stats")
     suspend fun getStats(): Response<Stats>
+
+    @POST("ai/analyze")
+    suspend fun postAiAnalyze(@Body data: VitalsAnalysisRequest): Response<VitalsAnalysisResponse>
 }

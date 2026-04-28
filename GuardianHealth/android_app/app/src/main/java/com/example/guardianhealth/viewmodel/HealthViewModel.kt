@@ -31,7 +31,9 @@ data class HealthUiState(
     val alerts: List<Alert> = emptyList(),
     val isLoadingAlerts: Boolean = false,
     val snackbarMessage: String? = null,
-    val previousHeartRate: Int = 75
+    val previousHeartRate: Int = 75,
+    val aiAnalysisResult: com.example.guardianhealth.data.VitalsAnalysisResponse? = null,
+    val isAiAnalyzing: Boolean = false
 )
 
 class HealthViewModel : ViewModel() {
@@ -283,6 +285,41 @@ class HealthViewModel : ViewModel() {
                 delay(5000L)
             }
         }
+    }
+
+    fun analyzeVitalsWithAi() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isAiAnalyzing = true)
+            try {
+                val resp = ApiClient.api.postAiAnalyze(
+                    com.example.guardianhealth.data.VitalsAnalysisRequest(
+                        heart_rate = _uiState.value.heartRate,
+                        spo2 = _uiState.value.spo2,
+                        symptoms = "None"
+                    )
+                )
+                if (resp.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        aiAnalysisResult = resp.body(),
+                        isAiAnalyzing = false
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isAiAnalyzing = false,
+                        snackbarMessage = "AI Analysis failed."
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isAiAnalyzing = false,
+                    snackbarMessage = "AI Analysis failed: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun dismissAiAnalysis() {
+        _uiState.value = _uiState.value.copy(aiAnalysisResult = null)
     }
 
     fun dismissEmergencyDialog() {

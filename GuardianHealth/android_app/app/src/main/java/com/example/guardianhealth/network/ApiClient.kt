@@ -9,7 +9,7 @@ object ApiClient {
     // ⚠️ Update this URL after deploying to Render
     // For emulator testing use: http://10.0.2.2:8000/
     // For physical device on same network: http://YOUR_PC_IP:8000/
-    const val BASE_URL = "https://guest-65oe.onrender.com/"
+    const val BASE_URL = "https://guardian-health-api-s10i.onrender.com/"
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)

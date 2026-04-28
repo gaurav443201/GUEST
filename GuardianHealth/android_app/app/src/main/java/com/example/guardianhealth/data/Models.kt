@@ -42,3 +42,17 @@ data class Stats(
     val service_requests: Int,
     val assistance_requests: Int
 )
+
+data class VitalsAnalysisRequest(
+    val heart_rate: Int,
+    val spo2: Int,
+    val symptoms: String = "None"
+)
+
+data class VitalsAnalysisResponse(
+    val status: String,
+    val guest_advice: String?,
+    val staff_action_plan: String?,
+    val risk_level: String?,
+    val message: String?
+)

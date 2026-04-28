@@ -4,6 +4,12 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import uuid
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = FastAPI(
     title="Guardian Health API",
@@ -51,6 +57,19 @@ class ApiResponse(BaseModel):
     message: Optional[str] = None
     alert_id: Optional[int] = None
 
+class VitalsAnalysisRequest(BaseModel):
+    heart_rate: int
+    spo2: int
+    age: Optional[int] = 30
+    symptoms: Optional[str] = "None"
+
+class VitalsAnalysisResponse(BaseModel):
+    status: str
+    guest_advice: Optional[str] = None
+    staff_action_plan: Optional[str] = None
+    risk_level: Optional[str] = None
+    message: Optional[str] = None
+
 # ---------- In-Memory Store ----------
 
 alerts_db: List[Alert] = []
@@ -66,8 +85,52 @@ def root():
     return {
         "message": "Guardian Health API v2.0 is running!",
         "docs": "/docs",
-        "endpoints": ["/health-data", "/emergency", "/alerts", "/service-request", "/resolve/{id}", "/clear"]
+        "endpoints": ["/health-data", "/emergency", "/alerts", "/service-request", "/resolve/{id}", "/clear", "/ai/analyze"]
     }
+
+@app.post("/ai/analyze", response_model=VitalsAnalysisResponse, tags=["AI"])
+def ai_analyze_vitals(data: VitalsAnalysisRequest):
+    """Use OpenAI to analyze vitals and provide advice/action plans."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return VitalsAnalysisResponse(
+            status="error",
+            message="OpenAI API key not configured on the server."
+        )
+
+    try:
+        prompt = f"""
+        A hotel guest has the following vitals:
+        - Heart Rate: {data.heart_rate} bpm
+        - SpO2: {data.spo2}%
+        - Symptoms: {data.symptoms}
+
+        Provide a JSON response with exactly these keys:
+        1. "guest_advice": A short, calming, 1-2 sentence advice directly addressing the guest.
+        2. "staff_action_plan": A 3-step action plan for the hotel staff to handle this situation.
+        3. "risk_level": "low", "medium", or "high" based on the severity of the vitals.
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a medical AI assistant for a hotel emergency response system. Always respond in valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" }
+        )
+        
+        import json
+        result = json.loads(response.choices[0].message.content)
+        
+        return VitalsAnalysisResponse(
+            status="success",
+            guest_advice=result.get("guest_advice"),
+            staff_action_plan=result.get("staff_action_plan"),
+            risk_level=result.get("risk_level")
+        )
+    except Exception as e:
+        return VitalsAnalysisResponse(status="error", message=str(e))
 
 @app.post("/health-data", response_model=ApiResponse, tags=["Vitals"])
 def receive_health_data(data: HealthData):

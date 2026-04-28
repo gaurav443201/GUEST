@@ -94,9 +94,35 @@ fun DashboardScreen(
             )
             ServiceButtons(
                 onRoomService = { viewModel.sendServiceRequest("room_service") },
-                onAssistance  = { viewModel.sendServiceRequest("assistance") }
+                onAssistance  = { viewModel.sendServiceRequest("assistance") },
+                onAiAnalyze   = { viewModel.analyzeVitalsWithAi() },
+                isAiAnalyzing = state.isAiAnalyzing
             )
             Spacer(Modifier.height(16.dp))
+        }
+
+        // AI Analysis Dialog
+        if (state.aiAnalysisResult != null) {
+            AlertDialog(
+                onDismissRequest = { viewModel.dismissAiAnalysis() },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.dismissAiAnalysis() }) {
+                        Text("Close", color = CyanPrimary)
+                    }
+                },
+                title = { Text("AI Health Analysis", color = TextPrimary) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Guest Advice:", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text(state.aiAnalysisResult!!.guest_advice ?: "No advice available.", color = TextSecondary)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Risk Level: ${state.aiAnalysisResult!!.risk_level?.uppercase()}", fontWeight = FontWeight.Bold, color = TextPrimary)
+                    }
+                },
+                containerColor = NavyCard,
+                titleContentColor = TextPrimary,
+                textContentColor = TextSecondary
+            )
         }
     }
 }
@@ -556,7 +582,7 @@ private fun SimButton(
 // ── Service Buttons ───────────────────────────────────────────────────────────
 
 @Composable
-private fun ServiceButtons(onRoomService: () -> Unit, onAssistance: () -> Unit) {
+private fun ServiceButtons(onRoomService: () -> Unit, onAssistance: () -> Unit, onAiAnalyze: () -> Unit, isAiAnalyzing: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
             "GUEST SERVICES",
@@ -583,6 +609,29 @@ private fun ServiceButtons(onRoomService: () -> Unit, onAssistance: () -> Unit) 
                 modifier = Modifier.weight(1f),
                 onClick = onAssistance
             )
+        }
+        
+        OutlinedButton(
+            onClick = onAiAnalyze,
+            enabled = !isAiAnalyzing,
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = NavyElevated,
+                contentColor = CyanPrimary,
+                disabledContentColor = CyanPrimary.copy(alpha = 0.5f)
+            ),
+            border = BorderStroke(1.dp, CyanPrimary.copy(alpha = 0.5f))
+        ) {
+            if (isAiAnalyzing) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = CyanPrimary, strokeWidth = 2.dp)
+                Spacer(Modifier.width(12.dp))
+                Text("Analyzing...", fontWeight = FontWeight.Bold)
+            } else {
+                Icon(Icons.Default.Analytics, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Analyze Vitals with AI", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
