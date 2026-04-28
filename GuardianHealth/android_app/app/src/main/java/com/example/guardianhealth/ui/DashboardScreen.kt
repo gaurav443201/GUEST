@@ -20,8 +20,6 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.guardianhealth.ui.theme.*
 import com.example.guardianhealth.viewmodel.*
-import kotlinx.coroutines.delay
-import kotlin.math.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,7 +100,7 @@ fun DashboardScreen(
         }
 
         // AI Analysis Dialog
-        if (state.aiAnalysisResult != null) {
+        state.aiAnalysisResult?.let { result ->
             AlertDialog(
                 onDismissRequest = { viewModel.dismissAiAnalysis() },
                 confirmButton = {
@@ -114,9 +112,9 @@ fun DashboardScreen(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Guest Advice:", fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Text(state.aiAnalysisResult!!.guest_advice ?: "No advice available.", color = TextSecondary)
+                        Text(result.guest_advice ?: "No advice available.", color = TextSecondary)
                         Spacer(Modifier.height(8.dp))
-                        Text("Risk Level: ${state.aiAnalysisResult!!.risk_level?.uppercase()}", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text("Risk Level: ${result.risk_level?.uppercase() ?: "UNKNOWN"}", fontWeight = FontWeight.Bold, color = TextPrimary)
                     }
                 },
                 containerColor = NavyCard,
@@ -352,7 +350,6 @@ private fun HeartRateCard(heartRate: Int, waveformPoints: List<Float>, status: H
                 if (pts.size < 2) return@Canvas
 
                 // Grid lines
-                val gridPaint = Paint().apply { color = NavyBorder }
                 for (i in 0..4) {
                     val y = h * i / 4
                     drawLine(NavyBorder, Offset(0f, y), Offset(w, y), 0.5f)

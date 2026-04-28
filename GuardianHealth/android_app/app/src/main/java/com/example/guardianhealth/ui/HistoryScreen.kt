@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
@@ -25,12 +27,22 @@ fun HistoryScreen(
     viewModel: HealthViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Snackbar trigger
+    LaunchedEffect(state.snackbarMessage) {
+        state.snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearSnackbar()
+        }
+    }
 
     // Refresh when entering this screen
     LaunchedEffect(Unit) { viewModel.fetchAlerts() }
 
     Scaffold(
         containerColor = NavyDeep,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -92,7 +104,10 @@ fun HistoryScreen(
                     visible = true,
                     enter = fadeIn() + slideInVertically { it / 3 }
                 ) {
-                    AlertRow(alert = alert)
+                    AlertRow(
+                        alert = alert,
+                        onResolve = { viewModel.resolveAlert(alert.id) }
+                    )
                 }
             }
 
@@ -140,7 +155,7 @@ private fun SummaryChip(label: String, count: Int, color: Color, modifier: Modif
 // ── Alert Row ─────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AlertRow(alert: Alert) {
+private fun AlertRow(alert: Alert, onResolve: () -> Unit) {
     val (accentColor, bgColor, typeLabel, priorityLabel) = when (alert.type) {
         "emergency"    -> AlertStyle(RedVital, RedSurface, "🚨 Emergency", "HIGH PRIORITY")
         "assistance"   -> AlertStyle(AmberVital, AmberSurface, "🔔 Assistance", "MEDIUM PRIORITY")
@@ -162,84 +177,102 @@ private fun AlertRow(alert: Alert) {
             color = if (isResolved) NavyBorder else accentColor.copy(alpha = 0.5f)
         )
     ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Left accent bar
-            Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(64.dp)
-                    .background(
-                        if (isResolved) NavyBorder else accentColor,
-                        RoundedCornerShape(4.dp)
-                    )
-            )
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                // Left accent bar
+                Box(
+                    modifier = Modifier
+                        .width(3.dp)
+                        .height(64.dp)
+                        .background(
+                            if (isResolved) NavyBorder else accentColor,
+                            RoundedCornerShape(4.dp)
+                        )
+                )
 
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(typeLabel, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
-                        color = if (isResolved) TextSecondary else TextPrimary)
-                    Text(
-                        "#${alert.id}",
-                        fontSize = 10.sp,
-                        color = TextMuted
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    InfoChip(Icons.Default.MeetingRoom, alert.room_number, accentColor, isResolved)
-                    InfoChip(Icons.Default.AccessTime, formatTime(alert.timestamp), accentColor, isResolved)
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (alert.heart_rate != null) {
-                        InfoChip(Icons.Default.Favorite, "${alert.heart_rate} bpm", accentColor, isResolved)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(typeLabel, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+                            color = if (isResolved) TextSecondary else TextPrimary)
+                        Text(
+                            "#${alert.id}",
+                            fontSize = 10.sp,
+                            color = TextMuted
+                        )
                     }
-                    if (alert.spo2 != null) {
-                        InfoChip(Icons.Default.WaterDrop, "${alert.spo2}% SpO₂", accentColor, isResolved)
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        InfoChip(Icons.Default.MeetingRoom, alert.room_number, accentColor, isResolved)
+                        InfoChip(Icons.Default.AccessTime, formatTime(alert.timestamp), accentColor, isResolved)
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (alert.heart_rate != null) {
+                            InfoChip(Icons.Default.Favorite, "${alert.heart_rate} bpm", accentColor, isResolved)
+                        }
+                        if (alert.spo2 != null) {
+                            InfoChip(Icons.Default.WaterDrop, "${alert.spo2}% SpO₂", accentColor, isResolved)
+                        }
+                    }
+                }
+
+                // Right: status badges
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                if (isResolved) NavyElevated else accentColor.copy(alpha = 0.15f),
+                                RoundedCornerShape(6.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            priorityLabel,
+                            fontSize = 9.sp,
+                            color = if (isResolved) TextMuted else accentColor,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .background(NavyElevated, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            if (isResolved) "✔ RESOLVED" else "● ACTIVE",
+                            fontSize = 9.sp,
+                            color = if (isResolved) GreenVital else accentColor,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
-            // Right: status badges
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            if (isResolved) NavyElevated else accentColor.copy(alpha = 0.15f),
-                            RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 6.dp, vertical = 3.dp)
+            // Resolve Button (Visible only if not resolved)
+            if (!isResolved) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onResolve,
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, accentColor.copy(alpha = 0.4f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accentColor),
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(
-                        priorityLabel,
-                        fontSize = 9.sp,
-                        color = if (isResolved) TextMuted else accentColor,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .background(NavyElevated, RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        if (isResolved) "✔ RESOLVED" else "● ACTIVE",
-                        fontSize = 9.sp,
-                        color = if (isResolved) GreenVital else accentColor,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("MARK AS RESOLVED", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

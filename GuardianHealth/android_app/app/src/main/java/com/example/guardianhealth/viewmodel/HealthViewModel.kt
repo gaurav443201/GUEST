@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.guardianhealth.data.Alert
 import com.example.guardianhealth.data.HealthData
 import com.example.guardianhealth.data.ServiceRequest
+import com.example.guardianhealth.data.VitalsAnalysisRequest
+import com.example.guardianhealth.data.VitalsAnalysisResponse
 import com.example.guardianhealth.network.ApiClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -32,7 +35,7 @@ data class HealthUiState(
     val isLoadingAlerts: Boolean = false,
     val snackbarMessage: String? = null,
     val previousHeartRate: Int = 75,
-    val aiAnalysisResult: com.example.guardianhealth.data.VitalsAnalysisResponse? = null,
+    val aiAnalysisResult: VitalsAnalysisResponse? = null,
     val isAiAnalyzing: Boolean = false
 )
 
@@ -56,7 +59,7 @@ class HealthViewModel : ViewModel() {
     init {
         repeat(60) { waveformBuffer.addLast(0f) }
         startWaveformGeneration()
-        startSimulation(SimulationMode.NORMAL)
+        setMode(SimulationMode.NORMAL)
         startAlertPolling()
     }
 
@@ -71,7 +74,10 @@ class HealthViewModel : ViewModel() {
                 val point = ecgPoint(tick, hr)
                 if (waveformBuffer.size >= 60) waveformBuffer.removeFirst()
                 waveformBuffer.addLast(point)
-                _uiState.value = _uiState.value.copy(waveformPoints = waveformBuffer.toList())
+                
+                val pointsList = waveformBuffer.toList()
+                _uiState.update { it.copy(waveformPoints = pointsList) }
+                
                 tick++
                 delay(80L)
             }
@@ -193,14 +199,16 @@ class HealthViewModel : ViewModel() {
         val status = determineStatus(hr, spo2, prevHR)
         val isEmergency = status == HealthStatus.EMERGENCY
 
-        _uiState.value = _uiState.value.copy(
-            heartRate = hr,
-            spo2 = spo2,
-            status = status,
-            mode = mode,
-            previousHeartRate = prevHR,
-            isEmergencyDialogVisible = if (isEmergency) true else _uiState.value.isEmergencyDialogVisible
-        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                heartRate = hr,
+                spo2 = spo2,
+                status = status,
+                mode = mode,
+                previousHeartRate = prevHR,
+                isEmergencyDialogVisible = if (isEmergency) true else currentState.isEmergencyDialogVisible
+            )
+        }
 
         // Send to backend only once per emergency event
         if (isEmergency && !emergencyAlreadySent) {
@@ -252,27 +260,45 @@ class HealthViewModel : ViewModel() {
                         room_number = ROOM_NUMBER
                     )
                 )
-                _uiState.value = _uiState.value.copy(snackbarMessage = "✅ $label request sent to staff.")
+                _uiState.update { it.copy(snackbarMessage = "✅ $label request sent to staff.") }
                 fetchAlerts()
             } catch (_: Exception) {
-                _uiState.value = _uiState.value.copy(snackbarMessage = "⚠️ Could not reach server. Check connection.")
+                _uiState.update { it.copy(snackbarMessage = "⚠️ Could not reach server. Check connection.") }
             }
         }
     }
 
     fun fetchAlerts() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoadingAlerts = true)
+            _uiState.update { it.copy(isLoadingAlerts = true) }
             try {
                 val resp = ApiClient.api.getAlerts()
                 if (resp.isSuccessful) {
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         alerts = resp.body() ?: emptyList(),
                         isLoadingAlerts = false
-                    )
+                    ) }
+                } else {
+                    _uiState.update { it.copy(isLoadingAlerts = false) }
                 }
             } catch (_: Exception) {
-                _uiState.value = _uiState.value.copy(isLoadingAlerts = false)
+                _uiState.update { it.copy(isLoadingAlerts = false) }
+            }
+        }
+    }
+
+    fun resolveAlert(alertId: Int) {
+        viewModelScope.launch {
+            try {
+                val resp = ApiClient.api.resolveAlert(alertId)
+                if (resp.isSuccessful) {
+                    _uiState.update { it.copy(snackbarMessage = "✅ Alert #$alertId marked as resolved.") }
+                    fetchAlerts()
+                } else {
+                    _uiState.update { it.copy(snackbarMessage = "❌ Failed to resolve alert.") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(snackbarMessage = "⚠️ Error: ${e.message}") }
             }
         }
     }
@@ -289,45 +315,45 @@ class HealthViewModel : ViewModel() {
 
     fun analyzeVitalsWithAi() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isAiAnalyzing = true)
+            _uiState.update { it.copy(isAiAnalyzing = true) }
             try {
                 val resp = ApiClient.api.postAiAnalyze(
-                    com.example.guardianhealth.data.VitalsAnalysisRequest(
+                    VitalsAnalysisRequest(
                         heart_rate = _uiState.value.heartRate,
                         spo2 = _uiState.value.spo2,
                         symptoms = "None"
                     )
                 )
                 if (resp.isSuccessful) {
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         aiAnalysisResult = resp.body(),
                         isAiAnalyzing = false
-                    )
+                    ) }
                 } else {
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.update { it.copy(
                         isAiAnalyzing = false,
                         snackbarMessage = "AI Analysis failed."
-                    )
+                    ) }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     isAiAnalyzing = false,
                     snackbarMessage = "AI Analysis failed: ${e.message}"
-                )
+                ) }
             }
         }
     }
 
     fun dismissAiAnalysis() {
-        _uiState.value = _uiState.value.copy(aiAnalysisResult = null)
+        _uiState.update { it.copy(aiAnalysisResult = null) }
     }
 
     fun dismissEmergencyDialog() {
-        _uiState.value = _uiState.value.copy(isEmergencyDialogVisible = false)
+        _uiState.update { it.copy(isEmergencyDialogVisible = false) }
     }
 
     fun clearSnackbar() {
-        _uiState.value = _uiState.value.copy(snackbarMessage = null)
+        _uiState.update { it.copy(snackbarMessage = null) }
     }
 
     private fun nowIso(): String =
