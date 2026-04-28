@@ -3,543 +3,460 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guardian Health — Staff Command Center</title>
-  <meta name="description" content="Real-time health monitoring staff dashboard for Guardian Health hospitality emergency response system." />
+  <title>Guardian Health — Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    /* ─── Reset & Base ─────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy-deep:     #070D1C;
-      --navy-surface:  #0D1626;
-      --navy-card:     #111C30;
+      --navy-deep: #070D1C;
+      --navy-card: #111C30;
       --navy-elevated: #172135;
-      --navy-border:   #1E2D45;
-      --cyan:          #00C8FF;
-      --cyan-dim:      #00A8D8;
-      --blue-accent:   #1A74E8;
-      --green:         #00E676;
-      --green-surface: #003320;
-      --green-border:  #005C38;
-      --amber:         #FFC107;
-      --amber-surface: #2C1F00;
-      --amber-border:  #5C4000;
-      --red:           #FF3D3D;
-      --red-surface:   #2C0000;
-      --red-border:    #7F0000;
-      --red-glow:      #FF1A1A;
-      --text-primary:  #F0F4FF;
-      --text-secondary:#8899BB;
-      --text-muted:    #4A5F80;
-      --font-main: 'Inter', sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      --navy-border: #1E2D45;
+      
+      --cyan: #00C8FF;
+      --red-vital: #FF3D3D;
+      --amber-vital: #FFC107;
+      --green-vital: #00E676;
+      
+      --text-primary: #F0F4FF;
+      --text-secondary: #8899BB;
+      --text-muted: #4A5F80;
     }
 
-    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      font-family: var(--font-main);
-      background: var(--navy-deep);
+      font-family: 'Inter', sans-serif;
+      background-color: var(--navy-deep);
       color: var(--text-primary);
       min-height: 100vh;
-      line-height: 1.5;
-      transition: background 0.5s ease;
-    }
-    body.emergency-active {
-      background: #120000;
-      animation: bodyFlash 0.9s infinite;
-    }
-    @keyframes bodyFlash {
-      0%,100% { box-shadow: inset 0 0 0 0 rgba(255,29,29,0); }
-      50%      { box-shadow: inset 0 0 80px 30px rgba(255,29,29,0.35); }
+      padding: 20px;
     }
 
-    /* ─── Layout ───────────────────────────────────────────────────────── */
-    .page-wrapper { max-width: 1300px; margin: 0 auto; padding: 0 20px 40px; }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding-top: 20px;
+    }
 
-    /* ─── Top Nav ──────────────────────────────────────────────────────── */
-    .topnav {
-      background: var(--navy-surface);
-      border-bottom: 1px solid var(--navy-border);
-      position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(12px);
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
     }
-    .topnav-inner {
-      max-width: 1300px; margin: 0 auto; padding: 0 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 60px;
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-icon {
+      color: var(--cyan);
+      font-size: 24px;
+      cursor: pointer;
     }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-icon {
-      width: 34px; height: 34px;
-      background: linear-gradient(135deg, var(--cyan), var(--blue-accent));
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .refresh-btn {
+      background: none;
+      border: none;
+      color: var(--cyan);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--navy-card);
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { background: var(--navy-elevated); transform: rotate(15deg); }
+
+    /* ── Summary Cards ── */
+    .summary-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .summary-card {
+      flex: 1;
+      background: var(--navy-card);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      border: 1px solid;
+    }
+    .summary-card.emergency { border-color: rgba(255, 61, 61, 0.4); }
+    .summary-card.assistance { border-color: rgba(255, 193, 7, 0.4); }
+    .summary-card.service { border-color: rgba(0, 230, 118, 0.4); }
+
+    .summary-value {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .summary-card.emergency .summary-value { color: var(--red-vital); }
+    .summary-card.assistance .summary-value { color: var(--amber-vital); }
+    .summary-card.service .summary-value { color: var(--green-vital); }
+
+    .summary-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .summary-card.emergency .dot { background: var(--red-vital); }
+    .summary-card.assistance .dot { background: var(--amber-vital); }
+    .summary-card.service .dot { background: var(--green-vital); }
+
+    /* ── Event Log ── */
+    .event-log-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .alert-card {
+      background: var(--navy-card);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      border: 1.5px solid var(--navy-border);
+      transition: all 0.3s ease;
+    }
+    .alert-card.emergency { border-color: rgba(255, 61, 61, 0.5); background: rgba(255, 61, 61, 0.05); }
+    .alert-card.assistance { border-color: rgba(255, 193, 7, 0.5); background: rgba(255, 193, 7, 0.05); }
+    .alert-card.service { border-color: rgba(0, 230, 118, 0.5); }
+    
+    .alert-card.resolved {
+      opacity: 0.6;
+      border-color: var(--navy-border);
+      background: var(--navy-card);
+    }
+
+    .accent-bar {
+      width: 4px;
+      border-radius: 4px;
+      margin-right: 16px;
+    }
+    .alert-card.emergency .accent-bar { background: var(--red-vital); }
+    .alert-card.assistance .accent-bar { background: var(--amber-vital); }
+    .alert-card.service .accent-bar { background: var(--green-vital); }
+    .alert-card.resolved .accent-bar { background: var(--navy-border); }
+
+    .card-content { flex: 1; }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .alert-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-id {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .priority-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
       border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      letter-spacing: 0.5px;
     }
-    .brand-name { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.3px; }
-    .brand-sub  { font-size: 10px; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; }
-    .nav-right  { display: flex; align-items: center; gap: 12px; }
-    .live-dot {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; font-weight: 600; color: var(--green);
-      padding: 5px 12px; background: var(--green-surface);
-      border: 1px solid var(--green-border); border-radius: 20px;
-    }
-    .live-dot::before {
-      content: '●';
-      animation: blink 1.2s infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-    .btn-clear {
-      display: flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--text-secondary);
-      border: 1px solid var(--navy-border);
-      padding: 6px 14px; border-radius: 8px;
-      font-size: 12px; font-weight: 600; font-family: var(--font-main);
-      cursor: pointer; transition: all 0.2s;
-    }
-    .btn-clear:hover { border-color: var(--red); color: var(--red); }
-    .clock { font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
+    .alert-card.emergency .priority-badge { background: rgba(255, 61, 61, 0.15); color: var(--red-vital); }
+    .alert-card.assistance .priority-badge { background: rgba(255, 193, 7, 0.15); color: var(--amber-vital); }
+    .alert-card.service .priority-badge { background: rgba(0, 230, 118, 0.15); color: var(--green-vital); }
+    .alert-card.resolved .priority-badge { background: var(--navy-elevated); color: var(--text-muted); }
 
-    /* ─── Stats Row ────────────────────────────────────────────────────── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px; margin: 24px 0 20px;
+    .info-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 8px;
     }
-    .stat-card {
-      background: var(--navy-card);
-      border: 1px solid var(--navy-border);
-      border-radius: 14px; padding: 16px 18px;
-      transition: transform 0.2s;
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
     }
-    .stat-card:hover { transform: translateY(-2px); }
-    .stat-label { font-size: 10px; font-weight: 600; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
-    .stat-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
-    .stat-card.emergency .stat-value { color: var(--red); }
-    .stat-card.warning   .stat-value { color: var(--amber); }
-    .stat-card.success   .stat-value { color: var(--green); }
-    .stat-card.info      .stat-value { color: var(--cyan); }
+    .info-icon { font-size: 14px; opacity: 0.7; }
+    
+    .alert-card.emergency .info-icon { color: var(--red-vital); }
+    .alert-card.assistance .info-icon { color: var(--amber-vital); }
+    .alert-card.service .info-icon { color: var(--green-vital); }
+    .alert-card.resolved .info-icon { color: var(--text-muted); }
 
-    /* ─── Section Header ───────────────────────────────────────────────── */
-    .section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .section-title {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; color: var(--text-muted);
-    }
-    .badge-count {
-      background: var(--navy-elevated); border: 1px solid var(--navy-border);
-      font-size: 11px; font-weight: 600; color: var(--text-secondary);
-      padding: 2px 9px; border-radius: 12px;
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
     }
 
-    /* ─── Filter Tabs ──────────────────────────────────────────────────── */
-    .filter-tabs {
-      display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+    .resolve-btn {
+      background: transparent;
+      border: 1px solid rgba(0, 230, 118, 0.4);
+      color: var(--green-vital);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
     }
-    .tab {
-      padding: 5px 14px; border-radius: 20px;
-      font-size: 12px; font-weight: 600;
-      border: 1px solid var(--navy-border);
-      background: transparent; color: var(--text-secondary);
-      cursor: pointer; transition: all 0.2s; font-family: var(--font-main);
+    .resolve-btn:hover {
+      background: rgba(0, 230, 118, 0.1);
+      border-color: var(--green-vital);
     }
-    .tab.active, .tab:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,200,255,0.08); }
-    .tab.active.emergency, .tab.emergency:hover { border-color: var(--red); color: var(--red); background: rgba(255,61,61,0.08); }
-    .tab.active.warning, .tab.warning:hover { border-color: var(--amber); color: var(--amber); background: rgba(255,193,7,0.08); }
-    .tab.active.success, .tab.success:hover { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.08); }
 
-    /* ─── Alert Table ──────────────────────────────────────────────────── */
-    .table-wrap {
-      background: var(--navy-card);
-      border: 1px solid var(--navy-border);
-      border-radius: 16px; overflow: hidden;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    thead th {
-      padding: 13px 18px; text-align: left;
+    .status-resolved {
+      color: var(--green-vital);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       background: var(--navy-elevated);
-      font-size: 10px; font-weight: 700; letter-spacing: 1px;
-      text-transform: uppercase; color: var(--text-muted);
-      border-bottom: 1px solid var(--navy-border);
+      padding: 6px 12px;
+      border-radius: 8px;
     }
-    tbody tr {
-      border-bottom: 1px solid rgba(30,45,69,0.6);
-      transition: background 0.15s;
-    }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(0,200,255,0.04); }
-    td { padding: 13px 18px; font-size: 13px; vertical-align: middle; }
 
-    /* Row type styling */
-    tr.type-emergency { border-left: 3px solid var(--red); background: rgba(44,0,0,0.4); }
-    tr.type-assistance { border-left: 3px solid var(--amber); background: rgba(44,31,0,0.3); }
-    tr.type-room_service { border-left: 3px solid var(--green); }
-    tr.resolved { opacity: 0.45; filter: grayscale(40%); }
+    /* AI Action Plan */
+    .ai-btn {
+      background: rgba(0, 200, 255, 0.1);
+      border: 1px solid rgba(0, 200, 255, 0.3);
+      color: var(--cyan);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: all 0.2s;
+    }
+    .ai-btn:hover { background: rgba(0, 200, 255, 0.2); }
+    
+    .ai-plan-box {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--navy-elevated);
+      border-radius: 8px;
+      border-left: 3px solid var(--cyan);
+      display: none;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
 
-    /* ─── Badges ───────────────────────────────────────────────────────── */
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 3px 9px; border-radius: 6px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
-      text-transform: uppercase; white-space: nowrap;
-    }
-    .badge-emergency { background: rgba(255,61,61,0.15); color: var(--red); border: 1px solid rgba(255,61,61,0.3); }
-    .badge-assistance{ background: rgba(255,193,7,0.15); color: var(--amber); border: 1px solid rgba(255,193,7,0.3); }
-    .badge-service   { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
-    .badge-active    { background: rgba(0,200,255,0.15); color: var(--cyan); border: 1px solid rgba(0,200,255,0.3); }
-    .badge-resolved  { background: rgba(74,95,128,0.2); color: var(--text-muted); border: 1px solid var(--navy-border); }
-    .badge-high      { background: rgba(255,61,61,0.1); color: var(--red); }
-    .badge-medium    { background: rgba(255,193,7,0.1); color: var(--amber); }
-    .badge-low       { background: rgba(0,230,118,0.1); color: var(--green); }
-
-    /* ─── Vital values ─────────────────────────────────────────────────── */
-    .vital { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
-    .vital.danger { color: var(--red); }
-    .vital.warn   { color: var(--amber); }
-    .vital.ok     { color: var(--green); }
-    .vital.na     { color: var(--text-muted); font-size: 12px; }
-
-    /* ─── Action button ────────────────────────────────────────────────── */
-    .btn-resolve {
-      background: transparent; border: 1px solid var(--navy-border);
-      color: var(--text-secondary); padding: 4px 12px; border-radius: 6px;
-      font-size: 11px; font-weight: 600; cursor: pointer;
-      font-family: var(--font-main); transition: all 0.2s; white-space: nowrap;
-    }
-    .btn-resolve:hover { border-color: var(--green); color: var(--green); }
-    .btn-resolve:disabled { opacity: 0.4; cursor: default; }
-
-    /* ─── Empty / Loading state ────────────────────────────────────────── */
-    .empty-state {
-      text-align: center; padding: 60px 20px; color: var(--text-secondary);
-    }
-    .empty-state .icon { font-size: 44px; margin-bottom: 12px; }
-    .empty-state h3 { font-size: 16px; color: var(--text-primary); margin-bottom: 6px; }
-    .empty-state p  { font-size: 13px; }
-    .spinner {
-      display: inline-block; width: 22px; height: 22px;
-      border: 2px solid var(--navy-border);
-      border-top-color: var(--cyan); border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ─── Emergency Banner ─────────────────────────────────────────────── */
-    #emergency-banner {
-      display: none; align-items: center; justify-content: space-between;
-      background: var(--red-surface); border: 1.5px solid var(--red-border);
-      border-radius: 12px; padding: 12px 20px; margin-bottom: 18px;
-      animation: pulseBorder 1s infinite;
-    }
-    #emergency-banner.visible { display: flex; }
-    @keyframes pulseBorder {
-      0%,100% { box-shadow: 0 0 0 0 rgba(255,61,61,0); }
-      50%      { box-shadow: 0 0 0 6px rgba(255,61,61,0.25); }
-    }
-    .banner-left { display: flex; align-items: center; gap: 12px; }
-    .banner-text h4 { font-size: 14px; font-weight: 700; color: var(--red); }
-    .banner-text p  { font-size: 12px; color: rgba(255,100,100,0.8); }
-
-    /* ─── Responsive ───────────────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-      thead th:nth-child(5), td:nth-child(5),
-      thead th:nth-child(6), td:nth-child(6) { display: none; }
-      .topnav-inner { gap: 8px; }
-      .clock { display: none; }
-    }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      thead th:nth-child(4), td:nth-child(4) { display: none; }
+    @media (max-width: 600px) {
+      .info-row { flex-direction: column; gap: 8px; }
+      .card-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+      .priority-badge { position: absolute; top: 16px; right: 16px; }
     }
   </style>
 </head>
 <body>
 
-<!-- Top Nav -->
-<nav class="topnav">
-  <div class="topnav-inner">
-    <div class="brand">
-      <div class="brand-icon">❤️</div>
+<div class="container">
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </div>
       <div>
-        <div class="brand-name">Guardian Health</div>
-        <div class="brand-sub">Staff Command Center</div>
+        <div class="header-title">Command Center</div>
+        <div class="header-subtitle" id="record-count">0 events recorded</div>
       </div>
     </div>
-    <div class="nav-right">
-      <div class="clock" id="clock">--:--:--</div>
-      <button class="btn-clear" onclick="clearAll()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        Clear All
-      </button>
-      <div class="live-dot"> LIVE</div>
-    </div>
-  </div>
-</nav>
-
-<div class="page-wrapper">
-
-  <!-- Emergency Banner -->
-  <div id="emergency-banner">
-    <div class="banner-left">
-      <span style="font-size:26px">🚨</span>
-      <div class="banner-text">
-        <h4>ACTIVE EMERGENCY DETECTED</h4>
-        <p id="banner-details">Critical vitals recorded — immediate response required</p>
-      </div>
-    </div>
-    <span style="color:var(--red); font-size:12px; font-weight:700; letter-spacing:1px">CRITICAL</span>
+    <button class="refresh-btn" onclick="fetchAlerts()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
   </div>
 
-  <!-- Stats Row -->
-  <div class="stats-row">
-    <div class="stat-card emergency">
-      <div class="stat-label">🔴 Emergencies</div>
-      <div class="stat-value" id="s-emergency">—</div>
-      <div class="stat-sub">Active critical events</div>
+  <!-- Summary Cards -->
+  <div class="summary-row">
+    <div class="summary-card emergency">
+      <div class="summary-value" id="count-emergency">0</div>
+      <div class="summary-label"><div class="dot"></div> Emergency</div>
     </div>
-    <div class="stat-card warning">
-      <div class="stat-label">🟡 Assistance</div>
-      <div class="stat-value" id="s-assistance">—</div>
-      <div class="stat-sub">Call for help</div>
+    <div class="summary-card assistance">
+      <div class="summary-value" id="count-assistance">0</div>
+      <div class="summary-label"><div class="dot"></div> Assistance</div>
     </div>
-    <div class="stat-card success">
-      <div class="stat-label">🟢 Room Service</div>
-      <div class="stat-value" id="s-service">—</div>
-      <div class="stat-sub">Service requests</div>
-    </div>
-    <div class="stat-card info">
-      <div class="stat-label">📋 Total Events</div>
-      <div class="stat-value" id="s-total">—</div>
-      <div class="stat-sub">Across all rooms</div>
-    </div>
-    <div class="stat-card success">
-      <div class="stat-label">✅ Resolved</div>
-      <div class="stat-value" id="s-resolved">—</div>
-      <div class="stat-sub">Handled by staff</div>
+    <div class="summary-card service">
+      <div class="summary-value" id="count-service">0</div>
+      <div class="summary-label"><div class="dot"></div> Service</div>
     </div>
   </div>
 
-  <!-- Alert Table -->
-  <div class="section-header">
-    <span class="section-title">Live Alert Feed</span>
-    <span class="badge-count" id="alert-count">0 events</span>
+  <!-- Event Log -->
+  <div class="event-log-title">EVENT LOG</div>
+  <div class="alert-list" id="alert-list">
+    <!-- Cards will be injected here -->
   </div>
 
-  <!-- Filter Tabs -->
-  <div class="filter-tabs">
-    <button class="tab active" data-filter="all"       onclick="setFilter('all',this)">All Events</button>
-    <button class="tab emergency" data-filter="emergency"  onclick="setFilter('emergency',this)">🔴 Emergency</button>
-    <button class="tab warning"  data-filter="assistance" onclick="setFilter('assistance',this)">🟡 Assistance</button>
-    <button class="tab success"  data-filter="room_service" onclick="setFilter('room_service',this)">🟢 Room Service</button>
-    <button class="tab"          data-filter="active"   onclick="setFilter('active',this)">Active Only</button>
-    <button class="tab"          data-filter="resolved" onclick="setFilter('resolved',this)">Resolved</button>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Type</th>
-          <th>Room</th>
-          <th>Time</th>
-          <th>Heart Rate</th>
-          <th>SpO₂</th>
-          <th>Priority</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="alert-tbody">
-        <tr>
-          <td colspan="9">
-            <div class="empty-state">
-              <div class="spinner"></div>
-              <p style="margin-top:12px">Connecting to Guardian Health API...</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-</div><!-- /page-wrapper -->
+</div>
 
 <script>
-  // ── Config ────────────────────────────────────────────────────────────────
-  const API_URL = "https://guardian-health-api-s10i.onrender.com";  // ← Update after Render deploy
-  let allAlerts = [];
-  let activeFilter = "all";
+  const API_URL = "https://guardian-health-api-s10i.onrender.com";
 
-  // ── Clock ─────────────────────────────────────────────────────────────────
-  function updateClock() {
-    document.getElementById("clock").textContent =
-      new Date().toLocaleTimeString("en-IN", { hour12: false });
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  // ── Filter ────────────────────────────────────────────────────────────────
-  function setFilter(filter, el) {
-    activeFilter = filter;
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    el.classList.add("active");
-    renderAlerts(allAlerts);
-  }
-
-  function applyFilter(alerts) {
-    if (activeFilter === "all")       return alerts;
-    if (activeFilter === "active")    return alerts.filter(a => a.status === "active");
-    if (activeFilter === "resolved")  return alerts.filter(a => a.status === "resolved");
-    return alerts.filter(a => a.type === activeFilter);
-  }
-
-  // ── Fetch Alerts ──────────────────────────────────────────────────────────
   async function fetchAlerts() {
     try {
       const r = await fetch(`${API_URL}/alerts`);
-      if (!r.ok) throw new Error("API error");
-      allAlerts = await r.json();
-      renderAlerts(allAlerts);
-      updateStats(allAlerts);
+      if (r.ok) {
+        const alerts = await r.json();
+        renderAlerts(alerts);
+        updateSummary(alerts);
+      }
     } catch (e) {
-      console.warn("Fetch error:", e);
+      console.error("Failed to fetch alerts", e);
     }
   }
 
-  // ── Stats ─────────────────────────────────────────────────────────────────
-  function updateStats(alerts) {
-    const emergencies = alerts.filter(a => a.type === "emergency" && a.status === "active").length;
-    const assistance  = alerts.filter(a => a.type === "assistance").length;
-    const service     = alerts.filter(a => a.type === "room_service").length;
-    const resolved    = alerts.filter(a => a.status === "resolved").length;
-
-    document.getElementById("s-emergency").textContent = emergencies;
-    document.getElementById("s-assistance").textContent = assistance;
-    document.getElementById("s-service").textContent = service;
-    document.getElementById("s-total").textContent = alerts.length;
-    document.getElementById("s-resolved").textContent = resolved;
-
-    // Emergency banner
-    const banner = document.getElementById("emergency-banner");
-    const activeEmergency = alerts.find(a => a.type === "emergency" && a.status === "active");
-    if (activeEmergency) {
-      banner.classList.add("visible");
-      document.body.classList.add("emergency-active");
-      document.getElementById("banner-details").textContent =
-        `Room ${activeEmergency.room_number} — HR: ${activeEmergency.heart_rate ?? "?"} bpm, SpO₂: ${activeEmergency.spo2 ?? "?"}%`;
-    } else {
-      banner.classList.remove("visible");
-      document.body.classList.remove("emergency-active");
-    }
+  function updateSummary(alerts) {
+    document.getElementById("record-count").textContent = `${alerts.length} events recorded`;
+    
+    document.getElementById("count-emergency").textContent = alerts.filter(a => a.type === "emergency").length;
+    document.getElementById("count-assistance").textContent = alerts.filter(a => a.type === "assistance").length;
+    document.getElementById("count-service").textContent = alerts.filter(a => a.type === "room_service").length;
   }
 
-  // ── Render Table ──────────────────────────────────────────────────────────
   function renderAlerts(alerts) {
-    const filtered = applyFilter(alerts);
-    const tbody = document.getElementById("alert-tbody");
-    document.getElementById("alert-count").textContent = `${filtered.length} event${filtered.length !== 1 ? "s" : ""}`;
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = `
-        <tr><td colspan="9">
-          <div class="empty-state">
-            <div class="icon">📋</div>
-            <h3>No Events Found</h3>
-            <p>No ${activeFilter === "all" ? "" : activeFilter + " "}records available yet.</p>
-          </div>
-        </td></tr>`;
+    const list = document.getElementById("alert-list");
+    
+    if (alerts.length === 0) {
+      list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary)">No events recorded yet.</div>`;
       return;
     }
 
-    tbody.innerHTML = filtered.map(a => {
-      const typeClass = `type-${a.type}`;
-      const resolvedClass = a.status === "resolved" ? "resolved" : "";
-
-      const typeBadge = {
-        emergency:    `<span class="badge badge-emergency">🚨 Emergency</span>`,
-        assistance:   `<span class="badge badge-assistance">🔔 Assistance</span>`,
-        room_service: `<span class="badge badge-service">🛎 Room Service</span>`,
-      }[a.type] || `<span class="badge">${a.type}</span>`;
-
-      const priorityBadge = {
-        high:   `<span class="badge badge-high">● High</span>`,
-        medium: `<span class="badge badge-medium">● Medium</span>`,
-        low:    `<span class="badge badge-low">● Low</span>`,
-      }[a.priority] || "—";
-
-      const statusBadge = a.status === "resolved"
-        ? `<span class="badge badge-resolved">✔ Resolved</span>`
-        : `<span class="badge badge-active">● Active</span>`;
-
-      const hrVal = a.heart_rate != null
-        ? `<span class="vital ${a.heart_rate > 150 ? "danger" : a.heart_rate > 100 ? "warn" : "ok"}">${a.heart_rate} bpm</span>`
-        : `<span class="vital na">—</span>`;
-
-      const spo2Val = a.spo2 != null
-        ? `<span class="vital ${a.spo2 < 85 ? "danger" : a.spo2 < 95 ? "warn" : "ok"}">${a.spo2}%</span>`
-        : `<span class="vital na">—</span>`;
+    list.innerHTML = alerts.map(a => {
+      const isResolved = a.status === "resolved";
+      
+      let typeClass = "service";
+      let title = "🛎 Room Service";
+      let priority = "LOW PRIORITY";
+      
+      if (a.type === "emergency") { typeClass = "emergency"; title = "🚨 Emergency"; priority = "HIGH PRIORITY"; }
+      if (a.type === "assistance") { typeClass = "assistance"; title = "🔔 Assistance"; priority = "MEDIUM PRIORITY"; }
 
       const timeStr = formatTime(a.timestamp);
-      const actionBtn = a.status !== "resolved"
-        ? `<button class="btn-resolve" onclick="resolve(${a.id})">Mark Resolved</button>`
-        : `<span style="color:var(--text-muted);font-size:11px">✔ Done</span>`;
+
+      // Resolve button or Resolved text
+      const actionHtml = isResolved 
+        ? `<div class="status-resolved"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> RESOLVED</div>`
+        : `
+           ${a.type === 'emergency' ? `<button class="ai-btn" onclick="getAiPlan(${a.id}, ${a.heart_rate}, ${a.spo2})">Get AI Plan</button>` : ''}
+           <button class="resolve-btn" onclick="resolve(${a.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> MARK AS RESOLVED</button>
+          `;
 
       return `
-        <tr class="${typeClass} ${resolvedClass}">
-          <td style="font-family:var(--font-mono);color:var(--text-muted)">#${a.id}</td>
-          <td>${typeBadge}</td>
-          <td style="font-weight:600">${a.room_number || a.location}</td>
-          <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap">${timeStr}</td>
-          <td>${hrVal}</td>
-          <td>${spo2Val}</td>
-          <td>${priorityBadge}</td>
-          <td>${statusBadge}</td>
-          <td>${actionBtn}</td>
-        </tr>`;
+        <div class="alert-card ${typeClass} ${isResolved ? 'resolved' : ''}">
+          <div class="accent-bar"></div>
+          <div class="card-content">
+            <div class="card-header">
+              <div class="alert-title">
+                ${title} <span class="alert-id">#${a.id}</span>
+              </div>
+              <div class="priority-badge">${priority}</div>
+            </div>
+            
+            <div class="info-row">
+              <div class="info-item">
+                <span class="info-icon">🚪</span> ${a.room_number || a.location}
+              </div>
+              <div class="info-item">
+                <span class="info-icon">⏱</span> ${timeStr}
+              </div>
+            </div>
+
+            <div class="info-row">
+              ${a.heart_rate != null ? `<div class="info-item"><span class="info-icon">❤️</span> ${a.heart_rate} bpm</div>` : ''}
+              ${a.spo2 != null ? `<div class="info-item"><span class="info-icon">💧</span> ${a.spo2}% SpO₂</div>` : ''}
+            </div>
+
+            <div class="ai-plan-box" id="ai-plan-${a.id}"></div>
+
+            <div class="card-actions">
+              ${actionHtml}
+            </div>
+          </div>
+        </div>
+      `;
     }).join("");
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
   async function resolve(id) {
     try {
-      const r = await fetch(`${API_URL}/resolve/${id}`, { method: "POST" });
-      if (r.ok) fetchAlerts();
+      await fetch(`${API_URL}/resolve/${id}`, { method: "POST" });
+      fetchAlerts();
     } catch (e) { console.error(e); }
   }
 
-  async function clearAll() {
-    if (!confirm("Clear all alerts and reset the dashboard?")) return;
+  async function getAiPlan(id, hr, spo2) {
+    const box = document.getElementById(`ai-plan-${id}`);
+    box.style.display = "block";
+    box.innerHTML = "<em>Analyzing with Guardian AI...</em>";
     try {
-      const r = await fetch(`${API_URL}/clear`, { method: "POST" });
-      if (r.ok) {
-        allAlerts = [];
-        renderAlerts([]);
-        updateStats([]);
+      const r = await fetch(`${API_URL}/ai/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heart_rate: hr, spo2: spo2, symptoms: "Emergency Alert Triggered" })
+      });
+      const data = await r.json();
+      if(data.status === "success") {
+        box.innerHTML = `<strong>AI Staff Action Plan:</strong><br/>${data.staff_action_plan.replace(/\n/g, '<br/>')}`;
+      } else {
+        box.innerHTML = `<span style="color:red">AI Error: ${data.message}</span>`;
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      box.innerHTML = `<span style="color:red">Failed to connect to AI.</span>`;
+    }
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   function formatTime(iso) {
     try {
       const d = new Date(iso);
-      return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })
-        + " · " + d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+      return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
     } catch { return iso; }
   }
 
-  // ── Poll every 2s ─────────────────────────────────────────────────────────
+  // Poll every 3s
   fetchAlerts();
-  setInterval(fetchAlerts, 2000);
+  setInterval(fetchAlerts, 3000);
 </script>
 </body>
 </html>
