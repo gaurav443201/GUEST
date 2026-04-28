@@ -1,230 +1,545 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian Health Dashboard</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; margin: 0; padding: 20px; color: #f8fafc; }
-        .container { max-width: 1100px; margin: auto; }
-        h1 { text-align: center; color: #f8fafc; margin-bottom: 30px; letter-spacing: 1px;}
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
-        .live-badge { background: #ef4444; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px; animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        th, td { padding: 16px 20px; text-align: left; }
-        th { background-color: #334155; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;}
-        tr { border-bottom: 1px solid #334155; transition: all 0.2s ease;}
-        tr:last-child { border-bottom: none; }
-        tr:hover { background-color: #2dd4bf11; }
-        .emergency { background-color: #7f1d1d88; border-left: 4px solid #ef4444; }
-        .service { border-left: 4px solid #3b82f6; }
-        .assistance { border-left: 4px solid #eab308; }
-        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-        .emergency .status-badge { background: #ef4444; color: white; }
-        .service .status-badge { background: #3b82f6; color: white; }
-        .assistance .status-badge { background: #eab308; color: black; }
-        .metric { font-weight: bold; font-size: 16px; }
-        .metric.danger { color: #fca5a5; }
-        
-        /* New styling for resolved rows */
-        tr.resolved { opacity: 0.6; filter: grayscale(100%); background-color: #1e293b !important; }
-        tr.resolved .status-badge { background: #475569; color: #cbd5e1; }
-        .resolve-btn {
-            background-color: transparent;
-            color: #94a3b8;
-            border: 1px solid #475569;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .resolve-btn:hover { background-color: #10b981; color: white; border-color: #10b981; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guardian Health — Staff Command Center</title>
+  <meta name="description" content="Real-time health monitoring staff dashboard for Guardian Health hospitality emergency response system." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy-deep:     #070D1C;
+      --navy-surface:  #0D1626;
+      --navy-card:     #111C30;
+      --navy-elevated: #172135;
+      --navy-border:   #1E2D45;
+      --cyan:          #00C8FF;
+      --cyan-dim:      #00A8D8;
+      --blue-accent:   #1A74E8;
+      --green:         #00E676;
+      --green-surface: #003320;
+      --green-border:  #005C38;
+      --amber:         #FFC107;
+      --amber-surface: #2C1F00;
+      --amber-border:  #5C4000;
+      --red:           #FF3D3D;
+      --red-surface:   #2C0000;
+      --red-border:    #7F0000;
+      --red-glow:      #FF1A1A;
+      --text-primary:  #F0F4FF;
+      --text-secondary:#8899BB;
+      --text-muted:    #4A5F80;
+      --font-main: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
 
-        
-        @keyframes emergencyFlash {
-            0% { box-shadow: inset 0 0 0 0 rgba(239,68,68, 0); }
-            50% { box-shadow: inset 0 0 60px 20px rgba(239,68,68, 0.9); }
-            100% { box-shadow: inset 0 0 0 0 rgba(239,68,68, 0); }
-        }
-        body.emergency-active {
-            animation: emergencyFlash 1s infinite;
-            background-color: #450a0a;
-            transition: background-color 0.4s ease;
-        }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-main);
+      background: var(--navy-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      transition: background 0.5s ease;
+    }
+    body.emergency-active {
+      background: #120000;
+      animation: bodyFlash 0.9s infinite;
+    }
+    @keyframes bodyFlash {
+      0%,100% { box-shadow: inset 0 0 0 0 rgba(255,29,29,0); }
+      50%      { box-shadow: inset 0 0 80px 30px rgba(255,29,29,0.35); }
+    }
 
-        .clear-btn {
-            background-color: #10b981;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .clear-btn:hover {
-            background-color: #059669;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.4);
-        }
-        .clear-btn:active {
-            transform: translateY(0);
-        }
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-    </style>
+    /* ─── Layout ───────────────────────────────────────────────────────── */
+    .page-wrapper { max-width: 1300px; margin: 0 auto; padding: 0 20px 40px; }
+
+    /* ─── Top Nav ──────────────────────────────────────────────────────── */
+    .topnav {
+      background: var(--navy-surface);
+      border-bottom: 1px solid var(--navy-border);
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .topnav-inner {
+      max-width: 1300px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue-accent));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.3px; }
+    .brand-sub  { font-size: 10px; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; }
+    .nav-right  { display: flex; align-items: center; gap: 12px; }
+    .live-dot {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: var(--green);
+      padding: 5px 12px; background: var(--green-surface);
+      border: 1px solid var(--green-border); border-radius: 20px;
+    }
+    .live-dot::before {
+      content: '●';
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    .btn-clear {
+      display: flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--text-secondary);
+      border: 1px solid var(--navy-border);
+      padding: 6px 14px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; font-family: var(--font-main);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-clear:hover { border-color: var(--red); color: var(--red); }
+    .clock { font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
+
+    /* ─── Stats Row ────────────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px; margin: 24px 0 20px;
+    }
+    .stat-card {
+      background: var(--navy-card);
+      border: 1px solid var(--navy-border);
+      border-radius: 14px; padding: 16px 18px;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-label { font-size: 10px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+    .stat-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+    .stat-card.emergency .stat-value { color: var(--red); }
+    .stat-card.warning   .stat-value { color: var(--amber); }
+    .stat-card.success   .stat-value { color: var(--green); }
+    .stat-card.info      .stat-value { color: var(--cyan); }
+
+    /* ─── Section Header ───────────────────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .badge-count {
+      background: var(--navy-elevated); border: 1px solid var(--navy-border);
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      padding: 2px 9px; border-radius: 12px;
+    }
+
+    /* ─── Filter Tabs ──────────────────────────────────────────────────── */
+    .filter-tabs {
+      display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .tab {
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      border: 1px solid var(--navy-border);
+      background: transparent; color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s; font-family: var(--font-main);
+    }
+    .tab.active, .tab:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,200,255,0.08); }
+    .tab.active.emergency, .tab.emergency:hover { border-color: var(--red); color: var(--red); background: rgba(255,61,61,0.08); }
+    .tab.active.warning, .tab.warning:hover { border-color: var(--amber); color: var(--amber); background: rgba(255,193,7,0.08); }
+    .tab.active.success, .tab.success:hover { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.08); }
+
+    /* ─── Alert Table ──────────────────────────────────────────────────── */
+    .table-wrap {
+      background: var(--navy-card);
+      border: 1px solid var(--navy-border);
+      border-radius: 16px; overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 13px 18px; text-align: left;
+      background: var(--navy-elevated);
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--navy-border);
+    }
+    tbody tr {
+      border-bottom: 1px solid rgba(30,45,69,0.6);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0,200,255,0.04); }
+    td { padding: 13px 18px; font-size: 13px; vertical-align: middle; }
+
+    /* Row type styling */
+    tr.type-emergency { border-left: 3px solid var(--red); background: rgba(44,0,0,0.4); }
+    tr.type-assistance { border-left: 3px solid var(--amber); background: rgba(44,31,0,0.3); }
+    tr.type-room_service { border-left: 3px solid var(--green); }
+    tr.resolved { opacity: 0.45; filter: grayscale(40%); }
+
+    /* ─── Badges ───────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .badge-emergency { background: rgba(255,61,61,0.15); color: var(--red); border: 1px solid rgba(255,61,61,0.3); }
+    .badge-assistance{ background: rgba(255,193,7,0.15); color: var(--amber); border: 1px solid rgba(255,193,7,0.3); }
+    .badge-service   { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+    .badge-active    { background: rgba(0,200,255,0.15); color: var(--cyan); border: 1px solid rgba(0,200,255,0.3); }
+    .badge-resolved  { background: rgba(74,95,128,0.2); color: var(--text-muted); border: 1px solid var(--navy-border); }
+    .badge-high      { background: rgba(255,61,61,0.1); color: var(--red); }
+    .badge-medium    { background: rgba(255,193,7,0.1); color: var(--amber); }
+    .badge-low       { background: rgba(0,230,118,0.1); color: var(--green); }
+
+    /* ─── Vital values ─────────────────────────────────────────────────── */
+    .vital { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+    .vital.danger { color: var(--red); }
+    .vital.warn   { color: var(--amber); }
+    .vital.ok     { color: var(--green); }
+    .vital.na     { color: var(--text-muted); font-size: 12px; }
+
+    /* ─── Action button ────────────────────────────────────────────────── */
+    .btn-resolve {
+      background: transparent; border: 1px solid var(--navy-border);
+      color: var(--text-secondary); padding: 4px 12px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      font-family: var(--font-main); transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-resolve:hover { border-color: var(--green); color: var(--green); }
+    .btn-resolve:disabled { opacity: 0.4; cursor: default; }
+
+    /* ─── Empty / Loading state ────────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--text-secondary);
+    }
+    .empty-state .icon { font-size: 44px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 16px; color: var(--text-primary); margin-bottom: 6px; }
+    .empty-state p  { font-size: 13px; }
+    .spinner {
+      display: inline-block; width: 22px; height: 22px;
+      border: 2px solid var(--navy-border);
+      border-top-color: var(--cyan); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Emergency Banner ─────────────────────────────────────────────── */
+    #emergency-banner {
+      display: none; align-items: center; justify-content: space-between;
+      background: var(--red-surface); border: 1.5px solid var(--red-border);
+      border-radius: 12px; padding: 12px 20px; margin-bottom: 18px;
+      animation: pulseBorder 1s infinite;
+    }
+    #emergency-banner.visible { display: flex; }
+    @keyframes pulseBorder {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,61,61,0); }
+      50%      { box-shadow: 0 0 0 6px rgba(255,61,61,0.25); }
+    }
+    .banner-left { display: flex; align-items: center; gap: 12px; }
+    .banner-text h4 { font-size: 14px; font-weight: 700; color: var(--red); }
+    .banner-text p  { font-size: 12px; color: rgba(255,100,100,0.8); }
+
+    /* ─── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      thead th:nth-child(5), td:nth-child(5),
+      thead th:nth-child(6), td:nth-child(6) { display: none; }
+      .topnav-inner { gap: 8px; }
+      .clock { display: none; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      thead th:nth-child(4), td:nth-child(4) { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="dashboard-header">
-            <h1>Guardian Health Live Monitors</h1>
-            <div class="header-controls">
-                <button class="clear-btn" onclick="clearAlerts()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
-                    Resolve All
-                </button>
-                <div class="live-badge">● LIVE</div>
-            </div>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Alert ID</th>
-                    <th>Request Type</th>
-                    <th>Location</th>
-                    <th>Time</th>
-                    <th>HR (BPM)</th>
-                    <th>SpO2 (%)</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="alerts-body">
-                <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Waiting for live updates...</td></tr>
-            </tbody>
-        </table>
+
+<!-- Top Nav -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="brand">
+      <div class="brand-icon">❤️</div>
+      <div>
+        <div class="brand-name">Guardian Health</div>
+        <div class="brand-sub">Staff Command Center</div>
+      </div>
     </div>
-    <script>
-        const API_URL = "https://guest-65oe.onrender.com"; // Update when deployed
+    <div class="nav-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <button class="btn-clear" onclick="clearAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Clear All
+      </button>
+      <div class="live-dot"> LIVE</div>
+    </div>
+  </div>
+</nav>
 
-        async function fetchAlerts() {
-            try {
-                const response = await fetch(`${API_URL}/alerts`);
-                if (!response.ok) throw new Error("Server disconnected");
-                const alerts = await response.json();
-                renderAlerts(alerts);
-            } catch (error) {
-                console.error("Error fetching alerts:", error);
-            }
-        }
+<div class="page-wrapper">
 
-        function renderAlerts(alerts) {
-            const tbody = document.getElementById("alerts-body");
-            if (alerts.length === 0) return;
-            
-            let hasEmergency = false;
-            tbody.innerHTML = "";
-            
-            alerts.forEach(alert => {
-                const tr = document.createElement("tr");
-                let alertTypeFormatted = alert.type.replace('_', ' ').toUpperCase();
-                
-                // Update row styling based on status
-                if (alert.status === "resolved") {
-                    tr.className = "resolved";
-                    if (alert.type === "emergency") {
-                        // Prevent emergency flashing if it was resolved
-                        hasEmergency = false; 
-                    }
-                } else {
-                    if (alert.type === "emergency") {
-                        tr.className = "emergency";
-                        hasEmergency = true;
-                    }
-                    else if (alert.type === "room_service") tr.className = "service";
-                    else if (alert.type === "assistance") tr.className = "assistance";
-                }
+  <!-- Emergency Banner -->
+  <div id="emergency-banner">
+    <div class="banner-left">
+      <span style="font-size:26px">🚨</span>
+      <div class="banner-text">
+        <h4>ACTIVE EMERGENCY DETECTED</h4>
+        <p id="banner-details">Critical vitals recorded — immediate response required</p>
+      </div>
+    </div>
+    <span style="color:var(--red); font-size:12px; font-weight:700; letter-spacing:1px">CRITICAL</span>
+  </div>
 
-                const hrMetric = alert.heart_rate ? `<span class="metric ${alert.heart_rate > 150 ? 'danger' : ''}">${alert.heart_rate}</span>` : '-';
-                const spoMetric = alert.spo2 ? `<span class="metric ${alert.spo2 < 85 ? 'danger' : ''}">${alert.spo2}%</span>` : '-';
-                
-                // Format relative time or standard time
-                const timeStr = new Date(alert.timestamp).toLocaleTimeString();
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card emergency">
+      <div class="stat-label">🔴 Emergencies</div>
+      <div class="stat-value" id="s-emergency">—</div>
+      <div class="stat-sub">Active critical events</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-label">🟡 Assistance</div>
+      <div class="stat-value" id="s-assistance">—</div>
+      <div class="stat-sub">Call for help</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">🟢 Room Service</div>
+      <div class="stat-value" id="s-service">—</div>
+      <div class="stat-sub">Service requests</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-label">📋 Total Events</div>
+      <div class="stat-value" id="s-total">—</div>
+      <div class="stat-sub">Across all rooms</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">✅ Resolved</div>
+      <div class="stat-value" id="s-resolved">—</div>
+      <div class="stat-sub">Handled by staff</div>
+    </div>
+  </div>
 
-                let badgeText = alert.status.toUpperCase();
-                if (alert.type === "emergency" && alert.status !== "resolved") badgeText = "CRITICAL";
+  <!-- Alert Table -->
+  <div class="section-header">
+    <span class="section-title">Live Alert Feed</span>
+    <span class="badge-count" id="alert-count">0 events</span>
+  </div>
 
-                tr.innerHTML = `
-                    <td>#${alert.id}</td>
-                    <td><strong>${alertTypeFormatted}</strong></td>
-                    <td>${alert.location}</td>
-                    <td>${timeStr}</td>
-                    <td>${hrMetric}</td>
-                    <td>${spoMetric}</td>
-                    <td><span class="status-badge">${badgeText}</span></td>
-                    <td>
-                        ${alert.status !== 'resolved' ? `<button class="resolve-btn" onclick="resolveTask(${alert.id})">Mark Resolved</button>` : `<span style="font-size:12px; color:#475569;">✔ Done</span>`}
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button class="tab active" data-filter="all"       onclick="setFilter('all',this)">All Events</button>
+    <button class="tab emergency" data-filter="emergency"  onclick="setFilter('emergency',this)">🔴 Emergency</button>
+    <button class="tab warning"  data-filter="assistance" onclick="setFilter('assistance',this)">🟡 Assistance</button>
+    <button class="tab success"  data-filter="room_service" onclick="setFilter('room_service',this)">🟢 Room Service</button>
+    <button class="tab"          data-filter="active"   onclick="setFilter('active',this)">Active Only</button>
+    <button class="tab"          data-filter="resolved" onclick="setFilter('resolved',this)">Resolved</button>
+  </div>
 
-            // Toggle red flashing animation
-            if (hasEmergency) {
-                document.body.classList.add("emergency-active");
-            } else {
-                document.body.classList.remove("emergency-active");
-            }
-        }
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Room</th>
+          <th>Time</th>
+          <th>Heart Rate</th>
+          <th>SpO₂</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="alert-tbody">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <div class="spinner"></div>
+              <p style="margin-top:12px">Connecting to Guardian Health API...</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-        // Poll every 1 second
-        setInterval(fetchAlerts, 1000);
-        fetchAlerts();
+</div><!-- /page-wrapper -->
 
-        async function clearAlerts() {
-            try {
-                const response = await fetch(`${API_URL}/clear`, { method: 'POST' });
-                if (response.ok) {
-                    fetchAlerts(); // Instantly refresh table
-                    document.body.classList.remove("emergency-active"); // Instantly turn off flash
-                } else {
-                    alert("Failed to clear alerts.");
-                }
-            } catch (error) {
-                console.error("Error clearing alerts:", error);
-                alert("Error connecting to server.");
-            }
-        }
+<script>
+  // ── Config ────────────────────────────────────────────────────────────────
+  const API_URL = "https://guest-65oe.onrender.com";  // ← Update after Render deploy
+  let allAlerts = [];
+  let activeFilter = "all";
 
-        async function resolveTask(alertId) {
-            try {
-                const response = await fetch(`${API_URL}/resolve/${alertId}`, { method: 'POST' });
-                if (response.ok) {
-                    fetchAlerts(); // Instantly refresh the table to show updated status
-                } else {
-                    alert("Failed to resolve task.");
-                }
-            } catch (error) {
-                console.error("Error resolving task:", error);
-                alert("Error connecting to server.");
-            }
-        }
-    </script>
+  // ── Clock ─────────────────────────────────────────────────────────────────
+  function updateClock() {
+    document.getElementById("clock").textContent =
+      new Date().toLocaleTimeString("en-IN", { hour12: false });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ── Filter ────────────────────────────────────────────────────────────────
+  function setFilter(filter, el) {
+    activeFilter = filter;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    el.classList.add("active");
+    renderAlerts(allAlerts);
+  }
+
+  function applyFilter(alerts) {
+    if (activeFilter === "all")       return alerts;
+    if (activeFilter === "active")    return alerts.filter(a => a.status === "active");
+    if (activeFilter === "resolved")  return alerts.filter(a => a.status === "resolved");
+    return alerts.filter(a => a.type === activeFilter);
+  }
+
+  // ── Fetch Alerts ──────────────────────────────────────────────────────────
+  async function fetchAlerts() {
+    try {
+      const r = await fetch(`${API_URL}/alerts`);
+      if (!r.ok) throw new Error("API error");
+      allAlerts = await r.json();
+      renderAlerts(allAlerts);
+      updateStats(allAlerts);
+    } catch (e) {
+      console.warn("Fetch error:", e);
+    }
+  }
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  function updateStats(alerts) {
+    const emergencies = alerts.filter(a => a.type === "emergency" && a.status === "active").length;
+    const assistance  = alerts.filter(a => a.type === "assistance").length;
+    const service     = alerts.filter(a => a.type === "room_service").length;
+    const resolved    = alerts.filter(a => a.status === "resolved").length;
+
+    document.getElementById("s-emergency").textContent = emergencies;
+    document.getElementById("s-assistance").textContent = assistance;
+    document.getElementById("s-service").textContent = service;
+    document.getElementById("s-total").textContent = alerts.length;
+    document.getElementById("s-resolved").textContent = resolved;
+
+    // Emergency banner
+    const banner = document.getElementById("emergency-banner");
+    const activeEmergency = alerts.find(a => a.type === "emergency" && a.status === "active");
+    if (activeEmergency) {
+      banner.classList.add("visible");
+      document.body.classList.add("emergency-active");
+      document.getElementById("banner-details").textContent =
+        `Room ${activeEmergency.room_number} — HR: ${activeEmergency.heart_rate ?? "?"} bpm, SpO₂: ${activeEmergency.spo2 ?? "?"}%`;
+    } else {
+      banner.classList.remove("visible");
+      document.body.classList.remove("emergency-active");
+    }
+  }
+
+  // ── Render Table ──────────────────────────────────────────────────────────
+  function renderAlerts(alerts) {
+    const filtered = applyFilter(alerts);
+    const tbody = document.getElementById("alert-tbody");
+    document.getElementById("alert-count").textContent = `${filtered.length} event${filtered.length !== 1 ? "s" : ""}`;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="9">
+          <div class="empty-state">
+            <div class="icon">📋</div>
+            <h3>No Events Found</h3>
+            <p>No ${activeFilter === "all" ? "" : activeFilter + " "}records available yet.</p>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(a => {
+      const typeClass = `type-${a.type}`;
+      const resolvedClass = a.status === "resolved" ? "resolved" : "";
+
+      const typeBadge = {
+        emergency:    `<span class="badge badge-emergency">🚨 Emergency</span>`,
+        assistance:   `<span class="badge badge-assistance">🔔 Assistance</span>`,
+        room_service: `<span class="badge badge-service">🛎 Room Service</span>`,
+      }[a.type] || `<span class="badge">${a.type}</span>`;
+
+      const priorityBadge = {
+        high:   `<span class="badge badge-high">● High</span>`,
+        medium: `<span class="badge badge-medium">● Medium</span>`,
+        low:    `<span class="badge badge-low">● Low</span>`,
+      }[a.priority] || "—";
+
+      const statusBadge = a.status === "resolved"
+        ? `<span class="badge badge-resolved">✔ Resolved</span>`
+        : `<span class="badge badge-active">● Active</span>`;
+
+      const hrVal = a.heart_rate != null
+        ? `<span class="vital ${a.heart_rate > 150 ? "danger" : a.heart_rate > 100 ? "warn" : "ok"}">${a.heart_rate} bpm</span>`
+        : `<span class="vital na">—</span>`;
+
+      const spo2Val = a.spo2 != null
+        ? `<span class="vital ${a.spo2 < 85 ? "danger" : a.spo2 < 95 ? "warn" : "ok"}">${a.spo2}%</span>`
+        : `<span class="vital na">—</span>`;
+
+      const timeStr = formatTime(a.timestamp);
+      const actionBtn = a.status !== "resolved"
+        ? `<button class="btn-resolve" onclick="resolve(${a.id})">Mark Resolved</button>`
+        : `<span style="color:var(--text-muted);font-size:11px">✔ Done</span>`;
+
+      return `
+        <tr class="${typeClass} ${resolvedClass}">
+          <td style="font-family:var(--font-mono);color:var(--text-muted)">#${a.id}</td>
+          <td>${typeBadge}</td>
+          <td style="font-weight:600">${a.room_number || a.location}</td>
+          <td style="color:var(--text-secondary);font-size:12px;white-space:nowrap">${timeStr}</td>
+          <td>${hrVal}</td>
+          <td>${spo2Val}</td>
+          <td>${priorityBadge}</td>
+          <td>${statusBadge}</td>
+          <td>${actionBtn}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  async function resolve(id) {
+    try {
+      const r = await fetch(`${API_URL}/resolve/${id}`, { method: "POST" });
+      if (r.ok) fetchAlerts();
+    } catch (e) { console.error(e); }
+  }
+
+  async function clearAll() {
+    if (!confirm("Clear all alerts and reset the dashboard?")) return;
+    try {
+      const r = await fetch(`${API_URL}/clear`, { method: "POST" });
+      if (r.ok) {
+        allAlerts = [];
+        renderAlerts([]);
+        updateStats([]);
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function formatTime(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })
+        + " · " + d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+    } catch { return iso; }
+  }
+
+  // ── Poll every 2s ─────────────────────────────────────────────────────────
+  fetchAlerts();
+  setInterval(fetchAlerts, 2000);
+</script>
 </body>
 </html>
